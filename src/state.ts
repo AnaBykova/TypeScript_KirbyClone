@@ -1,0 +1,1 @@
+//to keep global state of the game (*when to move to a new scene)

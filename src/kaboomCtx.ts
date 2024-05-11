@@ -1,0 +1,1 @@
+//inicialize Kaboom library, export its contest and use it elsewhere
