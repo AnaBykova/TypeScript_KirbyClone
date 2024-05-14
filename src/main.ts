@@ -22,4 +22,8 @@ async function gameSetup() {
       bird: { from: 27, to: 28, speed: 4, loop: true },
     },
   });
+
+  k.loadSprite("level-1", "./level-1.png");
 }
+
+gameSetup();
