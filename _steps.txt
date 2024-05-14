@@ -1,3 +1,6 @@
 npm create vite@latest .
 npm install
 npm install kaboom
+
+npm run dev
+http://localhost:5173/

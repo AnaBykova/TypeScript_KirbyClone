@@ -24,6 +24,22 @@ async function gameSetup() {
   });
 
   k.loadSprite("level-1", "./level-1.png");
+
+  //create scene + function with logic executing when we go to the scene
+  k.scene("level-1", () => {
+    //set up gravity
+    k.setGravity(2100);
+    //background for scene - rectangle, game object - entity component system
+    k.add([
+      k.rect(k.width(), k.height()), 
+      k.color(k.Color.fromHex("f7d7db")),
+      //this object not affected by the camera
+      k.fixed()
+    ]);
+  })
+
+  //specify default scene
+  k.go ("level-1");
 }
 
 gameSetup();
