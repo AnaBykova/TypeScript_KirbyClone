@@ -1,6 +1,7 @@
 //entry point of project
 
 import { k } from "./kaboomCtx";
+import { makeMap } from "./utils";
 
 async function gameSetup() {
   k.loadSprite("assets", "./kirby-like.png", {
@@ -25,6 +26,12 @@ async function gameSetup() {
 
   k.loadSprite("level-1", "./level-1.png");
 
+  //rename map and spawnPoints properties, later we will have a few levels
+  const { map: level1Layout, spawnPoints: level1SpawnPoints } = await makeMap(
+    k, 
+    "level-1"
+  );
+
   //create scene + function with logic executing when we go to the scene
   k.scene("level-1", () => {
     //set up gravity
@@ -34,9 +41,12 @@ async function gameSetup() {
       k.rect(k.width(), k.height()), 
       k.color(k.Color.fromHex("f7d7db")),
       //this object not affected by the camera
-      k.fixed()
+      k.fixed(),
     ]);
-  })
+
+    //draw map
+    k.add(level1Layout);
+  });
 
   //specify default scene
   k.go ("level-1");
