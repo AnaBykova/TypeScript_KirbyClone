@@ -60,8 +60,74 @@ export function makePlayer(k: KaboomCtx, posX: number, posY: number) {
     //logic to make player Flash/blink
     //tween lets change gradually from one value to another; await - becuse tween needs to be completed before move to next tween
     await k.tween(
-
-    )
-
+      //what we change
+      player.opacity,
+      //target value
+      0,
+      //time from 1 to 0, sec
+      0.05,
+      (val) => (player.opacity = val),
+      //what isthe rate of change - linear
+      k.easings.linear
+    );
+    //opacity from 0 to 1
+    await k.tween(
+      player.opacity,
+      1,
+      0.05,
+      (val) => (player.opacity = val),
+      k.easings.linear
+    );
   });
+
+  //exit door
+  player.onCollide("exit", () => {
+    k.go("level-2");
+  });
+
+  //inhaling mechanic/effect
+  //animation always playing, we tweak when it visible or not depends on situation
+  const inhaleEffect = k.add([
+    //Kirby object with animation
+    k.sprite("assets", {anim: "kirbInhaleEffect"}),
+    k.pos(),
+    k.scale(scale),
+    k.opacity(0),
+    //give it a tag
+    "inhaleEffect",
+  ]);
+
+  //inhaleZone - invisible box, where player can swallow enemy
+  const inhaleZone = player.add([
+    k.area({ shape: new k.Rect(k.vec2(0), 20, 40) }),
+    //position is empty/deside later because of player direction
+    k.pos(),
+    //tag
+    "inhaleZone",
+  ]);
+
+  //logic for inhale zone
+  inhaleZone.onUpdate(() => {
+    if (player.direction === "left") {
+      //inhaleZone - child of player, so it is relative to player
+      //we will pass this position to inhaleZone
+      inhaleZone.pos = k.vec2(-14, 8);
+      inhaleEffect.pos = k.vec2(player.pos.x - 60, player.pos.y + 0);
+      //our .png has inhale from left to right, so here flip = true
+      inhaleEffect.flipX = true;
+      return;
+    }
+    inhaleZone.pos = k.vec2(14, 8);
+    inhaleEffect.pos = k.vec2(player.pos.x + 60, player.pos.y + 0);
+    inhaleEffect.flipX = false;
+  });
+
+  //if player falls(y goes down) = dead, reset everything (health, etc.)
+  player.onUpdate(() => {
+    if (player.pos.y > 2000) {
+      k.go("level-1");
+    }
+  });
+
+  return player;
 }
