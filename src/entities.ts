@@ -1,31 +1,42 @@
 //file for logic for a player, maps, enemy
 import { scale } from "./constants";
-import { GameObj, KaboomCtx } from "kaboom";
+import { AreaComp, BodyComp, DoubleJumpComp, GameObj, HealthComp, KaboomCtx, OpacityComp, PosComp, ScaleComp, SpriteComp } from "kaboom";
+
+// create type for the player so PlayerGameObj has all this compomemt
+type PlayerGameObj = GameObj<
+  SpriteComp &
+  AreaComp &
+  BodyComp &
+  PosComp &
+  ScaleComp &
+  DoubleJumpComp &
+  HealthComp &
+  OpacityComp & {
+    speed: number;
+    direction: string;
+    isInhaling: boolean;
+    isFull: boolean;
+  }
+
+>
 
 //create game object for the player
 export function makePlayer(k: KaboomCtx, posX: number, posY: number) {
   const player = k.make([
     //which animation (from main.ts - gameSetup) start by default
     k.sprite("assets", { anim: "kirbIdle"}),
-
     //create rectangle 8*10, placed ib x=4 and y=5.9 relative to sprite - character
     k.area ({ shape: new k.Rect(k.vec2(4, 5.9), 8, 10) }),
-
     //player can be collide with other objects + gravity
     k.body(),
-
     k.pos(posX * scale, posY * scale),
-
     //scale sprite - character takes the correct amount of space
     k.scale(scale),
-    k.doubleJump(10),
-    
+    k.doubleJump(10),    
     //specify health value, we can you HP later (line 52)
     k.health(3),
-
     //fully visable if 1. When player was hit, it will be 0 = looks like it's flashing
     k.opacity(1),
-
     //in Kaboom.js we can pass object as a components, available immidiatly from player.<...>
     {
       speed: 300,
@@ -130,4 +141,46 @@ export function makePlayer(k: KaboomCtx, posX: number, posY: number) {
   });
 
   return player;
+}
+
+//mechanics of the Kirby: moving, swallowing, floating, etc.
+export function setControls(k: KaboomCtx, player: PlayerGameObj) {
+  //we need inhaleEffect from makePlayer function, so make referance:
+  const inhaleEffectRef = k.get("inhaleEffect")[0]
+
+  //coding player movement
+  k.onKeyDown((key) => {
+    switch (key) {
+      //character move left/right
+      case "left":
+        //from const player
+        player.direction = "left";
+        player.flipX = true;
+        player.move(-player.speed, 0);
+        break;
+      case "right":
+        player.direction = "right";
+        player.flipX = false;
+        player.move(player.speed, 0);
+        break;
+
+      //character inhale
+      case "z":
+        if(player.isFull) {
+          //play inhale animation
+          player.play("kirbFull");
+          //hide inhale Effect
+          inhaleEffectRef.opacity = 0;
+          break;
+        }
+        //if player is not full, let it inhale
+        player.isInhaling = true;
+        player.play("kirbInhaling");
+        inhaleEffectRef.opacity = 1;
+        break;
+      default:
+    }
+  }
+
+  )
 }
