@@ -4,3 +4,5 @@ npm install kaboom
 
 npm run dev
 http://localhost:5173/
+or
+npm run dev -- --host 0.0.0.0 for external access
