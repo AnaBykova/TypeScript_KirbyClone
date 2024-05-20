@@ -180,7 +180,58 @@ export function setControls(k: KaboomCtx, player: PlayerGameObj) {
         break;
       default:
     }
-  }
+  });
 
-  )
+  //jumping
+  k.onKeyPress((key) => {
+    if (key === "x") player.doubleJump();
+  });
+
+  //shooting stars
+  k.onKeyRelease((key) => {
+    if (key === "z") {
+      if (player.isFull) {
+        //playing inhaling animation because we use the same image for shooting and inhaling. Here animation for shooting
+        player.play("kirbInhaling");
+        const shootingStar = k.add([
+          //(for future expand game: copy ability of Kirby - not only inhale enemy but use their power)
+          k.sprite("assets", {
+            anim: "shootingStar",
+            //if player direction = right, flip Star image because it is for left direction
+            flipX: player.direction === "right",
+          }),
+          //rectangle box of shooting area
+          k.area({ shape: new k.Rect(k.vec2(5, 4), 6, 6) }),
+          k.pos(
+            //player.pos.x - 80 = position X relatively player
+            player.direction === "left" ? player.pos.x - 80 : player.pos.x + 80,
+            player.pos.y + 5
+          ),
+          //scale - to fix bug when 2nd pixel of image is taking 1.5pixels, not just 1
+          k.scale(scale),
+          //where shooting start will be sent
+          player.direction === "left"
+          ? k.move(k.LEFT, 800)
+          : k.move(k.RIGHT, 800),
+          //add a tag
+          "shootingStar",
+        ]);
+        //destroy shooting star when it collide the platform
+        shootingStar.onCollide("platform", () => k.destroy(shootingStar));
+
+        //Kirby character just shoot star so change it status
+        player.isFull = false;
+        // wait 1 sec before playing kirbIdle animation
+        k.wait(1, () => player.play("kirbIdle"));
+        return;
+      }
+
+      //character done inhaling and we don't want to show this effect
+      inhaleEffectRef.opacity = 0;
+      //no longer inhaling anything
+      player.isInhaling = false;
+      player.play("kirbIdle");
+    }
+  });
+
 }
