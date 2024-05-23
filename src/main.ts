@@ -69,7 +69,7 @@ async function gameSetup() {
       //make camera follow the player
       if (kirb.pos.x < level1Layout.pos.x + 432)
         //+500 = player on the left, lots of space on the right
-        k.camPos(kirb.pos.x + 500, 800);
+        k.camPos(kirb.pos.x + 500, 750);
     });
 
   });

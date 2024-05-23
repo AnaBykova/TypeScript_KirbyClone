@@ -235,3 +235,5 @@ export function setControls(k: KaboomCtx, player: PlayerGameObj) {
   });
 
 }
+
+//flame enemies
