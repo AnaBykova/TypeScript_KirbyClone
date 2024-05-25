@@ -237,3 +237,42 @@ export function setControls(k: KaboomCtx, player: PlayerGameObj) {
 }
 
 //flame enemies
+export function makeFlameEnemy(k: KaboomCtx, posX: number, posY: number) {
+  const flame = k.add([
+    k.sprite("assets", {anim: "flame"}),
+    k.scale(scale),
+    k.pos(posX * scale, posY * scale),
+    k.area({
+      shape: new k.Rect(k.vec2(4, 6), 8, 10),
+      //ignore collision with other enemy, * bird and flaimed enemy
+      collisionIgnore: ["enemy"],
+    }),
+    k.body(),
+    //for each state we add a behaveour: default state, all possible states
+    k.state("idle", ["idle", "jump"]),
+    //add tag
+    "enemy",
+  ]);
+
+  //defind state and what action we want
+  flame.onStateEnter("idle", async () => {
+    //wait 1 sec before moving on
+    await k.wait(1);
+    //arive in the jump state
+    flame.enterState("jump");
+  });
+
+  //when we in jump state, we jump with force 1000
+  flame.onStateEnter("jump", async () => {
+    flame.jump(1000);
+  });
+
+  flame.onStateUpdate("jump", async () => {
+    if (flame.isGrounded()) {
+    flame.enterState("idle");
+    }
+  });
+
+
+
+}
