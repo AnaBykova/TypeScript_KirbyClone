@@ -18,7 +18,7 @@ type PlayerGameObj = GameObj<
     isFull: boolean;
   }
 
->
+>;
 
 //create game object for the player
 export function makePlayer(k: KaboomCtx, posX: number, posY: number) {
@@ -110,7 +110,7 @@ export function makePlayer(k: KaboomCtx, posX: number, posY: number) {
 
   //inhaleZone - invisible box, where player can swallow enemy
   const inhaleZone = player.add([
-    k.area({ shape: new k.Rect(k.vec2(0), 20, 40) }),
+    k.area({ shape: new k.Rect(k.vec2(0), 20, 4) }),
     //position is empty/deside later because of player direction
     k.pos(),
     //tag
@@ -236,6 +236,38 @@ export function setControls(k: KaboomCtx, player: PlayerGameObj) {
 
 }
 
+export function makeInhalable(k: KaboomCtx, enemy: GameObj) {
+  //when enemy inside inhale zone its parametre is true
+  enemy.onCollide("inhaleZone", () => {
+    enemy.isInhalable = true;
+  });
+
+  //if enemy outside inhale zone/move away, its param is false
+  enemy.onCollideEnd("inhaleZone", () => {
+    enemy.isInhalable = false;
+  });
+
+  //if enemy collide with shooting start they both will be destroyed
+  enemy.onCollide("shootingStar", (shootingStar: GameObj) => {
+    k.destroy(enemy);
+    k.destroy(shootingStar);
+  });
+
+  const playerRef = k.get("player")[0];
+  //onUpdate - run every frame where object exist
+  enemy.onUpdate(() => {
+    // if player can inhale and enemy can be inhaled, move enemy
+    if (playerRef.isInhaling && enemy.isInhalable) {
+      if (playerRef.direction === "right") {
+        enemy.move(-800, 0);
+        return;
+      }
+      enemy.move(800, 0);
+    }
+  });
+}
+
+
 //flame enemies
 export function makeFlameEnemy(k: KaboomCtx, posX: number, posY: number) {
   const flame = k.add([
@@ -250,9 +282,12 @@ export function makeFlameEnemy(k: KaboomCtx, posX: number, posY: number) {
     k.body(),
     //for each state we add a behaveour: default state, all possible states
     k.state("idle", ["idle", "jump"]),
+    { isInhalable: false },
     //add tag
     "enemy",
   ]);
+
+  makeInhalable(k, flame);
 
   //defind state and what action we want
   flame.onStateEnter("idle", async () => {
@@ -273,8 +308,83 @@ export function makeFlameEnemy(k: KaboomCtx, posX: number, posY: number) {
     flame.enterState("idle");
     }
   });
-
   return flame;
+}
 
+//create guy + his moves
+export function makeGuyEnemy(k:KaboomCtx, posX: number, posY: number) {
+  const guy = k.add([
+    k.sprite("assets", { anim: "guyWalk"}),
+    k.scale(scale),
+    k.pos(posX * scale, posY * scale),
+    k.area({
+      shape: new k.Rect(k.vec2(2, 3.9), 12, 12),
+      collisionIgnore: ["enemy"],
+    }),
+    k.body(),
+    k.state("idle", ["idle", "left", "right"]),
+    { isInhalable: false, speed: 100 },
+    "enemy",
+  ]);
 
+  makeInhalable(k, guy);
+
+  guy.onStateEnter("idle", async () => {
+    //wait 1 sec before moving on
+    await k.wait(1);
+    //arive in the left state
+    guy.enterState("left");
+  });
+
+  guy.onStateEnter("left", async () => {
+    guy.flipX = false;
+    await k.wait(2);
+    //arive in the right state
+    guy.enterState("right");
+  });
+
+  guy.onStateUpdate("left", () => {
+    //move to the left
+    guy.move(-guy.speed, 0);
+  });
+
+  guy.onStateEnter("right", async () => {
+    guy.flipX = true;
+    await k.wait(2);
+    guy.enterState("left");
+  });
+
+  guy.onStateUpdate("right", () => {
+    //move to the right
+    guy.move(guy.speed, 0);
+  });
+
+  return guy;  
+}
+
+export function makeBirdEnemy(
+  k: KaboomCtx,
+  posX: number,
+  posY: number,
+  speed: number
+) {
+  const bird = k.add([
+    k.sprite("assets", { anim: "bird"}),
+    k.scale(scale),
+    k.pos(posX * scale, posY * scale),
+    k.area({
+      shape: new k.Rect(k.vec2(4, 6), 8, 10),
+      collisionIgnore: ["enemy"],
+    }),
+    //bird needs to be not effected by gravity (fly, not fall down), so static = true
+    k.body({ isStatic: true}),
+    k.move(k.LEFT, speed),
+    //if bird offscreen to far, so destroyed it because we want it start from the right and goes to the left
+    k.offscreen({ destroy: true, distance: 400 }),
+    "enemy",
+  ]);
+
+  makeInhalable(k, bird);
+
+  return bird;
 }
