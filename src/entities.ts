@@ -268,11 +268,13 @@ export function makeFlameEnemy(k: KaboomCtx, posX: number, posY: number) {
   });
 
   flame.onStateUpdate("jump", async () => {
+    //if flame is on the ground 
     if (flame.isGrounded()) {
     flame.enterState("idle");
     }
   });
 
+  return flame;
 
 
 }
